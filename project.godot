@@ -10,6 +10,42 @@ config_version=5
 
 [application]
 
-config/name="SaveSystem"
-config/features=PackedStringArray("4.4", "Forward Plus")
-config/icon="res://icon.svg"
+config/name="test"
+run/main_scene="uid://dijjkn3l760ma"
+config/features=PackedStringArray("4.7", "Forward Plus")
+
+[autoload]
+
+GUIDE="*uid://p2jwrgjcbexr"
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[dotnet]
+
+project/assembly_name="test"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/at-icons/plugin.cfg", "res://addons/compositespritesheetgenerator/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/guide/plugin.cfg", "res://addons/inspector_tabs/plugin.cfg", "res://addons/rider-plugin/plugin.cfg", "res://addons/rubonnek.quest_manager/plugin.cfg")
+
+[file_customization]
+
+folder_colors={
+"res://assets/": "green",
+"res://assets/definitions/": "orange",
+"res://assets/models/": "yellow",
+"res://assets/textures/": "pink",
+"res://scenes/": "blue",
+"res://scripts/": "purple"
+}
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"

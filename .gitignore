@@ -1,3 +1,14 @@
-# Redot 4+ specific ignores
+# Godot 4+ specific ignores
 .godot/
 /android/
+
+# Editor / IDE state
+.idea/
+
+# macOS
+.DS_Store
+
+# Loose docs / scratch files (keep out of history)
+/@icons picker.html
+/State Machine Antipixel Godot Documentation.pdf
+/README.txt

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/Entity.gd" id="1_un2oa"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_6obmx"]
+radius = 0.35
+height = 1.7
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_skgo6"]
+radius = 0.35
+height = 1.7
+
+[node name="Entity" type="CharacterBody3D"]
+script = ExtResource("1_un2oa")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_6obmx")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_skgo6")

@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dd5gjxesbcvo5"]
+
+[ext_resource type="Script" uid="uid://b0nyc8r25fyie" path="res://addons/compositespritesheetgenerator/dock/scripts/child_sprite_row.gd" id="1_l013k"]
+
+[node name="VBoxContainer" type="VBoxContainer" unique_id=968994100]
+offset_left = 406.0
+offset_right = 406.0
+offset_bottom = 40.0
+script = ExtResource("1_l013k")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=746339374]
+layout_mode = 2
+
+[node name="ChildFile" type="LineEdit" parent="HBoxContainer" unique_id=751961679]
+custom_minimum_size = Vector2(187, 0)
+layout_mode = 2
+placeholder_text = "Empty"
+editable = false
+
+[node name="Label" type="Label" parent="HBoxContainer" unique_id=1264113264]
+layout_mode = 2
+text = "Z-Index"
+
+[node name="ZIndex" type="SpinBox" parent="HBoxContainer" unique_id=2088551608]
+layout_mode = 2
+min_value = -100.0
+
+[node name="DeleteButton" type="Button" parent="HBoxContainer" unique_id=323667707]
+layout_mode = 2
+text = "Delete"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="." unique_id=996355047]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer2" unique_id=157334826]
+layout_mode = 2
+text = "X-Offset"
+
+[node name="XOffset" type="SpinBox" parent="HBoxContainer2" unique_id=199944960]
+layout_mode = 2
+min_value = -1000.0
+max_value = 1000.0
+
+[node name="Label2" type="Label" parent="HBoxContainer2" unique_id=1588814134]
+layout_mode = 2
+text = "Y-Offset:"
+
+[node name="YOffset" type="SpinBox" parent="HBoxContainer2" unique_id=464603625]
+layout_mode = 2
+min_value = -1000.0
+max_value = 1000.0
+
+[node name="HSeparator" type="HSeparator" parent="." unique_id=978867703]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+
+[connection signal="value_changed" from="HBoxContainer/ZIndex" to="." method="change_z_index"]
+[connection signal="pressed" from="HBoxContainer/DeleteButton" to="." method="delete"]
+[connection signal="value_changed" from="HBoxContainer2/XOffset" to="." method="change_x_offset"]
+[connection signal="value_changed" from="HBoxContainer2/YOffset" to="." method="change_y_offset"]

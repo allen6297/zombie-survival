@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BlockEntityProperties" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/block_entities/BlockEntityProperties.gd" id="1_08rel"]
+
+[resource]
+script = ExtResource("1_08rel")
+id = &"container_block_entity"
+display_name = "Container Block Entity"
+description = "A persistent block entity with a small inventory."
+kind = 1
+inventory_size = 8
+accepts_items = true
+emits_signal = false
+persists_state = true

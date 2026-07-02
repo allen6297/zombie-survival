@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="BlockProperties" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/blocks/BlockProperties.gd" id="1_vkgrr"]
+[ext_resource type="Texture2D" path="res://_textures/GREEN_prototype_grid_floor.png" id="2_vdtim"]
+[ext_resource type="Script" path="res://scripts/components/ComponentProperties.gd" id="3_q4jwy"]
+
+[sub_resource type="Resource" id="Resource_bgejp"]
+script = ExtResource("3_q4jwy")
+id = &"placeable"
+type = &"interaction"
+data = {
+"grid_size": 1
+}
+
+[resource]
+script = ExtResource("1_vkgrr")
+id = &"prototype_floor"
+display_name = "Prototype Floor"
+description = "A simple green floor block for layout testing."
+texture = ExtResource("2_vdtim")
+collision_mode = 1
+hardness = 1.0
+max_health = 10.0
+can_place = true
+can_break = true
+emits_light = false
+light_energy = 0
+drop_quantity = 1
+components = [SubResource("Resource_bgejp")]

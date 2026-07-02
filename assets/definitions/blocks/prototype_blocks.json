@@ -1,0 +1,52 @@
+{
+  "definitions": [
+    {
+      "id": "prototype_floor",
+      "display_name": "Prototype Floor",
+      "description": "A simple green floor block for layout testing.",
+      "texture": "res://_textures/GREEN_prototype_grid_floor.png",
+      "model": "",
+      "collision_mode": "solid",
+      "hardness": 1.0,
+      "max_health": 10.0,
+      "can_place": true,
+      "can_break": true,
+      "emits_light": false,
+      "light_energy": 0,
+      "drop_quantity": 1,
+      "components": [
+        {
+          "id": "placeable",
+          "type": "interaction",
+          "data": {
+            "grid_size": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "prototype_wall",
+      "display_name": "Prototype Wall",
+      "description": "A simple blue wall block for layout testing.",
+      "texture": "res://_textures/BLUE_prototype_grid_main.png",
+      "model": "",
+      "collision_mode": "solid",
+      "hardness": 2.0,
+      "max_health": 20.0,
+      "can_place": true,
+      "can_break": true,
+      "emits_light": false,
+      "light_energy": 0,
+      "drop_quantity": 1,
+      "components": [
+        {
+          "id": "placeable",
+          "type": "interaction",
+          "data": {
+            "grid_size": 1
+          }
+        }
+      ]
+    }
+  ]
+}

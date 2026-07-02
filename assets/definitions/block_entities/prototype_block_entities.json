@@ -1,0 +1,23 @@
+{
+  "definitions": [
+    {
+      "id": "container_block_entity",
+      "display_name": "Container Block Entity",
+      "description": "A persistent block entity with a small inventory.",
+      "kind": "container",
+      "inventory_size": 8,
+      "accepts_items": true,
+      "emits_signal": false,
+      "persists_state": true,
+      "components": [
+        {
+          "id": "inventory",
+          "type": "storage",
+          "data": {
+            "slots": 8
+          }
+        }
+      ]
+    }
+  ]
+}

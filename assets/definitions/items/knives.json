@@ -1,0 +1,58 @@
+{
+  "definitions": [
+    {
+      "id": "kitchen_knife",
+      "display_name": "Kitchen Knife",
+      "description": "A basic kitchen knife.",
+      "texture": "res://assets/textures/knives/�˵�1Kitchen Knife1_UV.png",
+      "model": "",
+      "stack_size": 1,
+      "components": [
+        {
+          "id": "damage",
+          "type": "combat",
+          "data": {
+            "amount": 4,
+            "damage_type": "slash"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chef_knife",
+      "display_name": "Chef's Knife",
+      "description": "A broad chef knife.",
+      "texture": "res://assets/textures/knives/�����Chef's Knife_UV.png",
+      "model": "",
+      "stack_size": 1,
+      "components": [
+        {
+          "id": "damage",
+          "type": "combat",
+          "data": {
+            "amount": 6,
+            "damage_type": "slash"
+          }
+        }
+      ]
+    },
+    {
+      "id": "paring_knife",
+      "display_name": "Paring Knife",
+      "description": "A small paring knife.",
+      "texture": "res://assets/textures/knives/ȥƤ��Paring Knife_UV.png",
+      "model": "",
+      "stack_size": 1,
+      "components": [
+        {
+          "id": "damage",
+          "type": "combat",
+          "data": {
+            "amount": 3,
+            "damage_type": "pierce"
+          }
+        }
+      ]
+    }
+  ]
+}

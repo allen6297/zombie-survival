@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://omv545olltuq"]
+
+[ext_resource type="Script" uid="uid://dd8ty0hj5iws7" path="res://addons/compositespritesheetgenerator/dock/scripts/expendable_list.gd" id="1_108ee"]
+
+[node name="VBoxContainer" type="VBoxContainer" unique_id=724541672]
+clip_contents = true
+custom_minimum_size = Vector2(0, 300)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_108ee")

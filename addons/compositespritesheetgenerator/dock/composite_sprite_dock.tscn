@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://dacmmt8mc1vas"]
+
+[ext_resource type="Script" uid="uid://chiyfku735rno" path="res://addons/compositespritesheetgenerator/dock/scripts/composite_sprite_dock.gd" id="1_ark85"]
+[ext_resource type="Script" uid="uid://dd8ty0hj5iws7" path="res://addons/compositespritesheetgenerator/dock/scripts/expendable_list.gd" id="2_qiclo"]
+
+[sub_resource type="Theme" id="Theme_56e1w"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5cchs"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.18867457, 0.04913608, 0.05120807, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 18
+
+[node name="Dock" type="PanelContainer" unique_id=858647002]
+layout_direction = 2
+script = ExtResource("1_ark85")
+
+[node name="LoadFileDialog" type="FileDialog" parent="." unique_id=1947737126]
+title = "Open a File"
+file_mode = 0
+filters = PackedStringArray("*.png,*.jpg,*.jpeg;Image Files;image/png,image/jpeg")
+show_hidden_files = true
+
+[node name="SaveFileDialog" type="FileDialog" parent="." unique_id=1131514085]
+filters = PackedStringArray("*.png;Image Files;image/png")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1856957899]
+clip_contents = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=1330239077]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SaveButton" type="Button" parent="ScrollContainer/VBoxContainer" unique_id=1565702222]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme = SubResource("Theme_56e1w")
+theme_override_colors/font_color = Color(0.581855, 0.9858214, 0.61685455, 1)
+theme_override_colors/font_outline_color = Color(0.74642164, 0.5094097, 0.59807855, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_5cchs")
+text = "Generate Spritesheet"
+
+[node name="Label" type="Label" parent="ScrollContainer/VBoxContainer" unique_id=378610808]
+layout_mode = 2
+text = "Main Sprite"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="ScrollContainer/VBoxContainer" unique_id=701734557]
+layout_mode = 2
+
+[node name="MainSprite" type="LineEdit" parent="ScrollContainer/VBoxContainer/HBoxContainer2" unique_id=303032733]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+placeholder_text = "Empty"
+editable = false
+
+[node name="LoadMainButton" type="Button" parent="ScrollContainer/VBoxContainer/HBoxContainer2" unique_id=845611610]
+layout_mode = 2
+text = "Load
+"
+
+[node name="Label2" type="Label" parent="ScrollContainer/VBoxContainer" unique_id=1772989384]
+layout_mode = 2
+text = "Child Sprites"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer" unique_id=1321995447]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer" unique_id=1945455214]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer" unique_id=1525235523]
+layout_mode = 2
+
+[node name="AddChildSpriteButton" type="Button" parent="ScrollContainer/VBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer" unique_id=670379263]
+layout_mode = 2
+text = "Add Spritesheet"
+
+[node name="ExpendableList" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainer" unique_id=689935989]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+script = ExtResource("2_qiclo")
+metadata/_custom_type_script = "uid://dd8ty0hj5iws7"
