@@ -44,8 +44,13 @@ func set_save_data(data: Dictionary, item_resolver := Callable()) -> void:
 
 
 func _apply_properties() -> void:
-	if not is_node_ready() or properties == null:
+	if properties == null:
 		return
 
+	# The container inventory is pure data, so create it as soon as the
+	# properties are assigned (not gated on the node being tree-ready).
 	if properties.has_inventory() and inventory == null:
 		inventory = InventoryResource.new(properties.inventory_size)
+
+	if not is_node_ready():
+		return

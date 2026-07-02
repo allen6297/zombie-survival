@@ -17,14 +17,14 @@ func _init(slot_count: int = 16) -> void:
 	_resize_slots()
 
 
-func add_item(item: ItemPropertiesResource, quantity: int = 1) -> int:
+func add_item(item: ItemPropertiesResource, quantity: int = 1, component_state: Dictionary = {}) -> int:
 	if item == null or quantity <= 0:
 		return quantity
 
 	var remaining := quantity
 
 	for slot in slots:
-		if slot.can_stack(item):
+		if slot.can_stack(item, component_state):
 			remaining = slot.add(remaining)
 			if remaining == 0:
 				return 0
@@ -33,6 +33,7 @@ func add_item(item: ItemPropertiesResource, quantity: int = 1) -> int:
 		if slot.is_empty():
 			slot.item = item
 			slot.quantity = remaining if remaining < item.stack_size else item.stack_size
+			slot.component_state = component_state.duplicate(true)
 			remaining -= slot.quantity
 			if remaining == 0:
 				return 0

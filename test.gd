@@ -4,6 +4,7 @@ extends SceneTree
 # godot --headless --path . -s test.gd
 
 const InventoryResource = preload("res://scripts/inventory/Inventory.gd")
+const ItemPropertiesResource = preload("res://scripts/items/ItemProperties.gd")
 const KITCHEN_KNIFE = preload("res://assets/definitions/items/knives/kitchen_knife.tres")
 const JsonDefinitionLoader = preload("res://scripts/registry/JsonDefinitionLoader.gd")
 const MinecraftModelJson = preload("res://scripts/models/MinecraftModelJson.gd")
@@ -11,9 +12,11 @@ const ItemNode = preload("res://scripts/items/Item.gd")
 const ItemStack = preload("res://scripts/items/ItemStack.gd")
 const InteractionContext = preload("res://scripts/components/InteractionContext.gd")
 const BlockNode = preload("res://scripts/blocks/Block.gd")
+const BlockPropertiesResource = preload("res://scripts/blocks/BlockProperties.gd")
 const WorldBlockPlacer = preload("res://scripts/world/WorldBlockPlacer.gd")
 const BlockEntityNode = preload("res://scripts/block_entities/BlockEntity.gd")
 const SaveSystemResource = preload("res://SaveSystem/save_system.gd")
+const GameStateResource = preload("res://scripts/game/GameState.gd")
 
 # YARD Registry .tres files (baked in the editor via the YARD tab).
 # Loaded at runtime so a missing/unbaked registry SKIPs its test instead of
@@ -58,6 +61,9 @@ func _init() -> void:
 		_test_minecraft_model_json,
 		_test_save_roundtrip,
 		_test_block_entity_inventory_save,
+		_test_inventory_component_state,
+		_test_block_entity_world_wiring,
+		_test_game_state_save,
 	]
 
 	for test in tests:
@@ -421,4 +427,149 @@ func _test_block_entity_inventory_save() -> int:
 
 	chest.free()
 	restored.free()
+	return result
+
+
+func _test_inventory_component_state() -> int:
+	var item_registry = _load_yard_registry(ITEM_YARD_REGISTRY_PATH, "item")
+	if item_registry == null:
+		return SKIP
+
+	var item_resolver := func(id: StringName): return item_registry.load_entry(id)
+
+	# Stacking rule, using a synthetic stackable item: same state merges,
+	# differing state (and stateless) stays in separate slots.
+	var stackable := ItemPropertiesResource.new()
+	stackable.id = &"test_stackable"
+	stackable.stack_size = 64
+
+	var bench := InventoryResource.new(8)
+	bench.add_item(stackable, 5, {"tier": "a"})
+	bench.add_item(stackable, 3, {"tier": "a"})
+	bench.add_item(stackable, 2, {"tier": "b"})
+	bench.add_item(stackable, 4)
+
+	var occupied := 0
+	var tier_a_qty := 0
+	for slot in bench.slots:
+		if not slot.is_empty():
+			occupied += 1
+			if slot.component_state.get("tier") == "a":
+				tier_a_qty = slot.quantity
+
+	# Persistence, using a registry-resolvable item so state survives a
+	# get_save_data/set_save_data round-trip.
+	var kitchen_knife = item_registry.load_entry(&"kitchen_knife")
+	var inv := InventoryResource.new(2)
+	inv.add_item(kitchen_knife, 1, {"durability": 7})
+	var restored := InventoryResource.new(2)
+	restored.set_save_data(inv.get_save_data(), item_resolver)
+
+	var restored_durability = null
+	for slot in restored.slots:
+		if not slot.is_empty():
+			restored_durability = slot.component_state.get("durability")
+
+	if occupied != 3:
+		push_error("Expected stateful/stateless items to occupy 3 slots, got %d." % occupied)
+	elif tier_a_qty != 8:
+		push_error("Expected same-state items to stack to 8, got %d." % tier_a_qty)
+	elif restored_durability != 7:
+		push_error("Expected restored slot to preserve durability state.")
+	else:
+		print("Inventory component-state smoke test passed.")
+		return PASS
+	return FAIL
+
+
+func _test_block_entity_world_wiring() -> int:
+	var item_registry = _load_yard_registry(ITEM_YARD_REGISTRY_PATH, "item")
+	var block_entity_registry = _load_yard_registry(BLOCK_ENTITY_YARD_REGISTRY_PATH, "block entity")
+	if item_registry == null or block_entity_registry == null:
+		return SKIP
+
+	var item_resolver := func(id: StringName): return item_registry.load_entry(id)
+	var kitchen_knife = item_registry.load_entry(&"kitchen_knife")
+	var container_props = block_entity_registry.load_entry(&"container_block_entity")
+
+	# A synthetic block whose definition carries a block entity.
+	var block_props := BlockPropertiesResource.new()
+	block_props.id = &"test_chest_block"
+	block_props.block_entity = container_props
+	var block_resolver := func(id: StringName): return block_props if id == &"test_chest_block" else null
+
+	# Placing it should spawn and track a block entity.
+	var world := WorldBlockPlacer.new()
+	world.place_block(block_props, Vector3i(0, 1, 0))
+	var chest := world.get_block_entity(Vector3i(0, 1, 0))
+	if chest != null and chest.inventory != null:
+		chest.inventory.add_item(kitchen_knife, 2)
+
+	# The world save should nest the block entity's inventory and restore it.
+	var restored_world := WorldBlockPlacer.new()
+	restored_world.set_save_data(world.get_save_data(), block_resolver, item_resolver)
+	var restored_chest := restored_world.get_block_entity(Vector3i(0, 1, 0))
+
+	var result := FAIL
+	if chest == null:
+		push_error("Expected placing a block with a block_entity to spawn one.")
+	elif restored_chest == null:
+		push_error("Expected restored world to respawn the block entity.")
+	elif restored_chest.inventory == null or not restored_chest.inventory.has_item(kitchen_knife, 2):
+		push_error("Expected restored block entity inventory to contain 2 kitchen_knives.")
+	else:
+		print("Block entity world wiring smoke test passed.")
+		result = PASS
+
+	world.free()
+	restored_world.free()
+	return result
+
+
+func _test_game_state_save() -> int:
+	var item_registry = _load_yard_registry(ITEM_YARD_REGISTRY_PATH, "item")
+	var block_registry = _load_yard_registry(BLOCK_YARD_REGISTRY_PATH, "block")
+	if item_registry == null or block_registry == null:
+		return SKIP
+
+	var item_resolver := func(id: StringName): return item_registry.load_entry(id)
+	var block_resolver := func(id: StringName): return block_registry.load_entry(id)
+	var kitchen_knife = item_registry.load_entry(&"kitchen_knife")
+	var wall = block_registry.load_entry(&"prototype_wall")
+
+	# Bundle inventory + world behind one GameState and store it through the
+	# SaveSystem's single-object API.
+	var game := GameStateResource.new()
+	game.inventory = InventoryResource.new(4)
+	game.world = WorldBlockPlacer.new()
+	game.item_resolver = item_resolver
+	game.block_resolver = block_resolver
+	game.inventory.add_item(kitchen_knife, 1)
+	game.world.place_block(wall, Vector3i(7, 0, 0))
+
+	var save := SaveSystemResource.new()
+	save.store_game(game)
+	save.set_save_game("game_state_test.txt")
+
+	var loaded := SaveSystemResource.new()
+	loaded.get_save_game("game_state_test.txt")
+
+	var restored := GameStateResource.new()
+	restored.inventory = InventoryResource.new(4)
+	restored.world = WorldBlockPlacer.new()
+	restored.item_resolver = item_resolver
+	restored.block_resolver = block_resolver
+	loaded.retrieve_game(restored)
+
+	var result := FAIL
+	if not restored.inventory.has_item(kitchen_knife, 1):
+		push_error("Expected restored game inventory to contain the kitchen_knife.")
+	elif restored.world.get_block(Vector3i(7, 0, 0)) == null:
+		push_error("Expected restored game world to contain the placed block.")
+	else:
+		print("Game state save smoke test passed.")
+		result = PASS
+
+	game.world.free()
+	restored.world.free()
 	return result

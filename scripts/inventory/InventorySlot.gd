@@ -5,14 +5,22 @@ const ItemPropertiesResource := preload("res://scripts/items/ItemProperties.gd")
 
 @export var item: ItemPropertiesResource
 @export var quantity: int = 0
+## Per-instance runtime state (e.g. durability). Items with differing state do
+## not stack together. An empty dictionary means a plain, stateless entry.
+@export var component_state: Dictionary = {}
 
 
 func is_empty() -> bool:
 	return item == null or quantity <= 0
 
 
-func can_stack(other_item: ItemPropertiesResource) -> bool:
-	return not is_empty() and item == other_item and quantity < item.stack_size
+func can_stack(other_item: ItemPropertiesResource, other_state: Dictionary = {}) -> bool:
+	return (
+		not is_empty()
+		and item == other_item
+		and quantity < item.stack_size
+		and component_state == other_state
+	)
 
 
 func remaining_capacity() -> int:
@@ -35,15 +43,19 @@ func add(amount: int) -> int:
 func clear() -> void:
 	item = null
 	quantity = 0
+	component_state = {}
 
 
 func get_save_data() -> Dictionary:
 	if is_empty():
 		return {}
-	return {
+	var data := {
 		"id": item.id,
 		"quantity": quantity,
 	}
+	if not component_state.is_empty():
+		data["component_state"] = component_state
+	return data
 
 
 ## Restores this slot from [param data]. [param resolver] is a
@@ -57,5 +69,7 @@ func set_save_data(data: Dictionary, resolver: Callable) -> void:
 
 	item = resolver.call(id)
 	quantity = int(data.get("quantity", 0))
+	var raw_state = data.get("component_state", {})
+	component_state = raw_state.duplicate(true) if raw_state is Dictionary else {}
 	if item == null or quantity <= 0:
 		clear()
