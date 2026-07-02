@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="BlockEntityRegistry" load_steps=3 format=3]
-
-[ext_resource type="Script" path="res://scripts/block_entities/BlockEntityRegistry.gd" id="1_ylspi"]
-[ext_resource type="Resource" path="res://assets/definitions/block_entities/prototype/container_block_entity.tres" id="2_s1tlx"]
-
-[resource]
-script = ExtResource("1_ylspi")
-block_entities = [ExtResource("2_s1tlx")]

@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemProperties" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemProperties" format=3 uid="uid://cdqwjkkjfdhn8"]
 
 [ext_resource type="Script" path="res://scripts/items/ItemProperties.gd" id="1_jkfik"]
+[ext_resource type="Script" path="res://scripts/components/ComponentProperties.gd" id="1_wf364"]
 [ext_resource type="Texture2D" path="res://assets/textures/knives/�����Chef's Knife_UV.png" id="2_qahtq"]
 
 [resource]
 script = ExtResource("1_jkfik")
 id = &"chef_knife"
 display_name = "Chef's Knife"
-stack_size = 1
 texture = ExtResource("2_qahtq")

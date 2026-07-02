@@ -1,14 +1,10 @@
-[gd_resource type="Resource" script_class="EntityProperties" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EntityProperties" format=3 uid="uid://d3p0ixeue52t3"]
 
-[ext_resource type="Script" path="res://scripts/entities/EntityProperties.gd" id="1_3um0x"]
+[ext_resource type="Script" uid="uid://dldgkx08l55m4" path="res://scripts/components/ComponentProperties.gd" id="1_2xlmr"]
+[ext_resource type="Script" uid="uid://dv3gu2c3kj56t" path="res://scripts/entities/EntityProperties.gd" id="1_3um0x"]
 
 [resource]
 script = ExtResource("1_3um0x")
 id = &"prototype_entity"
 display_name = "Prototype Entity"
 description = "A neutral test entity for early gameplay systems."
-kind = 0
-max_health = 20.0
-move_speed = 5.0
-interaction_range = 2.0
-can_take_damage = true

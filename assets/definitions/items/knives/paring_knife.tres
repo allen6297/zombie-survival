@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemProperties" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemProperties" format=3 uid="uid://2h8lon5etnwa"]
 
 [ext_resource type="Script" path="res://scripts/items/ItemProperties.gd" id="1_m3x07"]
+[ext_resource type="Script" path="res://scripts/components/ComponentProperties.gd" id="1_qyttd"]
 [ext_resource type="Texture2D" path="res://assets/textures/knives/ȥƤ��Paring Knife_UV.png" id="2_f4lg5"]
 
 [resource]
 script = ExtResource("1_m3x07")
 id = &"paring_knife"
 display_name = "Paring Knife"
-stack_size = 1
 texture = ExtResource("2_f4lg5")

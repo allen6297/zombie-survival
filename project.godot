@@ -29,7 +29,7 @@ project/assembly_name="test"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/at-icons/plugin.cfg", "res://addons/compositespritesheetgenerator/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/guide/plugin.cfg", "res://addons/inspector_tabs/plugin.cfg", "res://addons/rider-plugin/plugin.cfg", "res://addons/rubonnek.quest_manager/plugin.cfg")
+enabled=PackedStringArray("res://addons/at-icons/plugin.cfg", "res://addons/compositespritesheetgenerator/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/guide/plugin.cfg", "res://addons/inspector_tabs/plugin.cfg", "res://addons/rider-plugin/plugin.cfg", "res://addons/rubonnek.quest_manager/plugin.cfg", "res://addons/yard/plugin.cfg")
 
 [file_customization]
 

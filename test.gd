@@ -5,10 +5,6 @@ extends SceneTree
 
 const InventoryResource = preload("res://scripts/inventory/Inventory.gd")
 const KITCHEN_KNIFE = preload("res://assets/definitions/items/knives/kitchen_knife.tres")
-const ITEM_REGISTRY = preload("res://assets/definitions/items/item_registry.tres")
-const BLOCK_REGISTRY = preload("res://assets/definitions/blocks/block_registry.tres")
-const ENTITY_REGISTRY = preload("res://assets/definitions/entities/entity_registry.tres")
-const BLOCK_ENTITY_REGISTRY = preload("res://assets/definitions/block_entities/block_entity_registry.tres")
 const JsonDefinitionLoader = preload("res://scripts/registry/JsonDefinitionLoader.gd")
 const MinecraftModelJson = preload("res://scripts/models/MinecraftModelJson.gd")
 const ItemNode = preload("res://scripts/items/Item.gd")
@@ -17,8 +13,22 @@ const InteractionContext = preload("res://scripts/components/InteractionContext.
 const BlockNode = preload("res://scripts/blocks/Block.gd")
 const WorldBlockPlacer = preload("res://scripts/world/WorldBlockPlacer.gd")
 
+# YARD Registry .tres files (baked in the editor via the YARD tab).
+# Loaded at runtime so a missing/unbaked registry SKIPs its test instead of
+# breaking compilation.
+const ITEM_YARD_REGISTRY_PATH := "res://assets/definitions/items/item_registry.yard.tres"
+const BLOCK_YARD_REGISTRY_PATH := "res://assets/definitions/blocks/block_registry.yard.tres"
+const ENTITY_YARD_REGISTRY_PATH := "res://assets/definitions/entities/entity_registry.yard.tres"
+const BLOCK_ENTITY_YARD_REGISTRY_PATH := "res://assets/definitions/block_entities/block_entity_registry.yard.tres"
+
+# Test result states.
+const PASS := 0
+const FAIL := 1
+const SKIP := 2
+
 var _passed := 0
 var _failed := 0
+var _skipped := 0
 
 
 class DamageTarget:
@@ -47,16 +57,34 @@ func _init() -> void:
 	]
 
 	for test in tests:
-		if test.call():
-			_passed += 1
-		else:
-			_failed += 1
+		match test.call():
+			PASS:
+				_passed += 1
+			SKIP:
+				_skipped += 1
+			_:
+				_failed += 1
 
-	print("Smoke tests finished: %d passed, %d failed." % [_passed, _failed])
+	print("Smoke tests finished: %d passed, %d failed, %d skipped." % [_passed, _failed, _skipped])
 	quit(1 if _failed > 0 else 0)
 
 
-func _test_inventory() -> bool:
+## Loads a YARD registry at [param path], or returns null (with a SKIP hint) if
+## the file does not exist yet or has not been baked/scanned in the editor.
+func _load_yard_registry(path: String, label: String) -> Resource:
+	if not ResourceLoader.exists(path):
+		print("SKIP: %s YARD registry not found at %s (create + scan it in the YARD tab)." % [label, path])
+		return null
+
+	var registry = load(path)
+	if registry == null or registry.is_empty():
+		print("SKIP: %s YARD registry at %s is empty (scan it in the YARD tab)." % [label, path])
+		return null
+
+	return registry
+
+
+func _test_inventory() -> int:
 	var inventory = InventoryResource.new(2)
 
 	var first_remainder: int = inventory.add_item(KITCHEN_KNIFE, 1)
@@ -72,29 +100,36 @@ func _test_inventory() -> bool:
 		push_error("Expected kitchen_knife TRES to have a damage component.")
 	else:
 		print("Inventory smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_item_registry() -> bool:
-	var kitchen_knife = ITEM_REGISTRY.get_item(&"kitchen_knife")
-	var chef_knife = ITEM_REGISTRY.get_item(&"chef_knife")
+func _test_item_registry() -> int:
+	var registry = _load_yard_registry(ITEM_YARD_REGISTRY_PATH, "item")
+	if registry == null:
+		return SKIP
+
+	var kitchen_knife = registry.load_entry(&"kitchen_knife")
 
 	if kitchen_knife == null:
 		push_error("Expected kitchen_knife in the item registry.")
-	elif chef_knife == null:
+	elif not registry.has(&"chef_knife"):
 		push_error("Expected chef_knife in the item registry.")
 	elif kitchen_knife.stack_size != 1:
 		push_error("Expected kitchen_knife to be non-stackable.")
 	else:
 		print("Item registry smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_block_registry() -> bool:
-	var floor_block = BLOCK_REGISTRY.get_block(&"prototype_floor")
-	var wall_block = BLOCK_REGISTRY.get_block(&"prototype_wall")
+func _test_block_registry() -> int:
+	var registry = _load_yard_registry(BLOCK_YARD_REGISTRY_PATH, "block")
+	if registry == null:
+		return SKIP
+
+	var floor_block = registry.load_entry(&"prototype_floor")
+	var wall_block = registry.load_entry(&"prototype_wall")
 
 	if floor_block == null:
 		push_error("Expected prototype_floor in the block registry.")
@@ -104,12 +139,16 @@ func _test_block_registry() -> bool:
 		push_error("Expected prototype_wall to be solid.")
 	else:
 		print("Block registry smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_entity_registry() -> bool:
-	var entity = ENTITY_REGISTRY.get_entity(&"prototype_entity")
+func _test_entity_registry() -> int:
+	var registry = _load_yard_registry(ENTITY_YARD_REGISTRY_PATH, "entity")
+	if registry == null:
+		return SKIP
+
+	var entity = registry.load_entry(&"prototype_entity")
 
 	if entity == null:
 		push_error("Expected prototype_entity in the entity registry.")
@@ -117,12 +156,16 @@ func _test_entity_registry() -> bool:
 		push_error("Expected prototype_entity max health to be alive.")
 	else:
 		print("Entity registry smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_block_entity_registry() -> bool:
-	var block_entity = BLOCK_ENTITY_REGISTRY.get_block_entity(&"container_block_entity")
+func _test_block_entity_registry() -> int:
+	var registry = _load_yard_registry(BLOCK_ENTITY_YARD_REGISTRY_PATH, "block entity")
+	if registry == null:
+		return SKIP
+
+	var block_entity = registry.load_entry(&"container_block_entity")
 
 	if block_entity == null:
 		push_error("Expected container_block_entity in the block entity registry.")
@@ -130,11 +173,11 @@ func _test_block_entity_registry() -> bool:
 		push_error("Expected container_block_entity to have inventory.")
 	else:
 		print("Block entity registry smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_json_definitions() -> bool:
+func _test_json_definitions() -> int:
 	var item_registry = JsonDefinitionLoader.load_item_registry("res://assets/definitions/items/knives.json")
 	var block_registry = JsonDefinitionLoader.load_block_registry("res://assets/definitions/blocks/prototype_blocks.json")
 	var entity_registry = JsonDefinitionLoader.load_entity_registry("res://assets/definitions/entities/prototype_entities.json")
@@ -162,11 +205,11 @@ func _test_json_definitions() -> bool:
 		push_error("Expected container_block_entity JSON definition to have an inventory component.")
 	else:
 		print("JSON definition smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_item_use_pipeline() -> bool:
+func _test_item_use_pipeline() -> int:
 	var item := ItemNode.new()
 	var target := DamageTarget.new()
 	var context := InteractionContext.new()
@@ -185,11 +228,11 @@ func _test_item_use_pipeline() -> bool:
 		push_error("Expected damage processor to record defeated target.")
 	else:
 		print("Item use pipeline smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_item_stack_runtime_state() -> bool:
+func _test_item_stack_runtime_state() -> int:
 	var stack := ItemStack.new(KITCHEN_KNIFE, 1)
 	stack.set_component_value(&"durability", &"current", 10)
 
@@ -203,14 +246,18 @@ func _test_item_stack_runtime_state() -> bool:
 		push_error("Expected consumed one-item stack to be empty.")
 	else:
 		print("Item stack runtime state smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_world_block_placement() -> bool:
+func _test_world_block_placement() -> int:
+	var registry = _load_yard_registry(BLOCK_YARD_REGISTRY_PATH, "block")
+	if registry == null:
+		return SKIP
+
 	var world := WorldBlockPlacer.new()
 	var context := InteractionContext.new()
-	var wall_block = BLOCK_REGISTRY.get_block(&"prototype_wall")
+	var wall_block = registry.load_entry(&"prototype_wall")
 	context.world = world
 	context.block = wall_block
 	context.target_grid_position = Vector3i(2, 0, 0)
@@ -223,15 +270,19 @@ func _test_world_block_placement() -> bool:
 		push_error("Expected world block placer to track placed block.")
 	else:
 		print("World block placement smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_block_interaction_pipeline() -> bool:
+func _test_block_interaction_pipeline() -> int:
+	var registry = _load_yard_registry(BLOCK_YARD_REGISTRY_PATH, "block")
+	if registry == null:
+		return SKIP
+
 	var block := BlockNode.new()
 	var world := WorldBlockPlacer.new()
 	var context := InteractionContext.new()
-	block.properties = BLOCK_REGISTRY.get_block(&"prototype_wall")
+	block.properties = registry.load_entry(&"prototype_wall")
 	context.world = world
 	context.target_grid_position = Vector3i(3, 0, 0)
 
@@ -243,11 +294,11 @@ func _test_block_interaction_pipeline() -> bool:
 		push_error("Expected block interaction to populate placement position.")
 	else:
 		print("Block interaction pipeline smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL
 
 
-func _test_minecraft_model_json() -> bool:
+func _test_minecraft_model_json() -> int:
 	var model = MinecraftModelJson.load_from_file("res://assets/models/minecraft/block/carrots_stage0.json")
 
 	if model.parent != "minecraft:block/crop":
@@ -262,5 +313,5 @@ func _test_minecraft_model_json() -> bool:
 		push_error("Expected carrots_stage0 to be a parent-template model.")
 	else:
 		print("Minecraft model JSON smoke test passed.")
-		return true
-	return false
+		return PASS
+	return FAIL

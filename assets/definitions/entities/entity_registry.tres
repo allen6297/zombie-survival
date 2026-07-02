@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="EntityRegistry" load_steps=3 format=3]
-
-[ext_resource type="Script" path="res://scripts/entities/EntityRegistry.gd" id="1_qypam"]
-[ext_resource type="Resource" path="res://assets/definitions/entities/prototype/prototype_entity.tres" id="2_ypxx6"]
-
-[resource]
-script = ExtResource("1_qypam")
-entities = [ExtResource("2_ypxx6")]

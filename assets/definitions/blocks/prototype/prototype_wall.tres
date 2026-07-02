@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="BlockProperties" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="BlockProperties" format=3 uid="uid://dyt622jxdbb6q"]
 
-[ext_resource type="Script" path="res://scripts/blocks/BlockProperties.gd" id="1_vpya3"]
-[ext_resource type="Texture2D" path="res://_textures/BLUE_prototype_grid_main.png" id="2_g4ks1"]
-[ext_resource type="Script" path="res://scripts/components/ComponentProperties.gd" id="3_4d7fh"]
+[ext_resource type="Script" uid="uid://xl3u5vsuase" path="res://scripts/blocks/BlockProperties.gd" id="1_vpya3"]
+[ext_resource type="Texture2D" uid="uid://d0ag8o7ljj217" path="res://_textures/BLUE_prototype_grid_main.png" id="2_g4ks1"]
+[ext_resource type="Script" uid="uid://dldgkx08l55m4" path="res://scripts/components/ComponentProperties.gd" id="3_4d7fh"]
 
 [sub_resource type="Resource" id="Resource_ry5wb"]
 script = ExtResource("3_4d7fh")
@@ -18,12 +18,6 @@ id = &"prototype_wall"
 display_name = "Prototype Wall"
 description = "A simple blue wall block for layout testing."
 texture = ExtResource("2_g4ks1")
-collision_mode = 1
 hardness = 2.0
 max_health = 20.0
-can_place = true
-can_break = true
-emits_light = false
-light_energy = 0
-drop_quantity = 1
-components = [SubResource("Resource_ry5wb")]
+components = Array[ExtResource("3_4d7fh")]([SubResource("Resource_ry5wb")])

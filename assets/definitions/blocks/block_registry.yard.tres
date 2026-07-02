@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Registry" format=3 uid="uid://bavpj2t4ma1k3"]
+
+[ext_resource type="Script" uid="uid://dqtv77mng5dyh" path="res://addons/yard/registry.gd" id="1_lcbsv"]
+
+[resource]
+script = ExtResource("1_lcbsv")
+_version = 2
+_scan_rulesets = Array[Dictionary]([{
+&"allowed_file_extensions": Array[String]([]),
+&"class_restrictions": Array[StringName]([&"BlockProperties"]),
+&"recursive_scan": true,
+&"scan_directories": Array[String](["res://assets/definitions/blocks"]),
+&"scan_regex_exclude": "",
+&"scan_regex_include": ""
+}])
+_uids_to_string_ids = Dictionary[StringName, StringName]({
+&"uid://c7qi1yveso7r2": &"prototype_floor",
+&"uid://dyt622jxdbb6q": &"prototype_wall"
+})
+_string_ids_to_uids = Dictionary[StringName, StringName]({
+&"prototype_floor": &"uid://c7qi1yveso7r2",
+&"prototype_wall": &"uid://dyt622jxdbb6q"
+})

@@ -1,12 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bv6q6jc8ngxb4"]
 
-[ext_resource type="Script" path="res://scripts/inventory/ItemPickup.gd" id="1_6xm4l"]
+[ext_resource type="Script" uid="uid://csga113y1ewua" path="res://scripts/inventory/ItemPickup.gd" id="1_6xm4l"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_lx3na"]
 radius = 0.75
 
-[node name="ItemPickup" type="Area3D"]
+[node name="ItemPickup" type="Area3D" unique_id=1821006369]
 script = ExtResource("1_6xm4l")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=219885546]
 shape = SubResource("SphereShape3D_lx3na")
