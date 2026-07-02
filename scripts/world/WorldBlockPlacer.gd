@@ -32,3 +32,36 @@ func remove_block(grid_position: Vector3i) -> bool:
 	placed_blocks.erase(grid_position)
 	block.queue_free()
 	return true
+
+
+func get_save_data() -> Array:
+	var out: Array = []
+	for grid_position in placed_blocks:
+		var block: Block = placed_blocks[grid_position]
+		if block != null and block.properties != null:
+			out.append({
+				"id": block.properties.id,
+				"position": grid_position,
+			})
+	return out
+
+
+## Restores placed blocks from [param data], clearing any existing ones first.
+## [param resolver] is a [code]func(id: StringName) -> BlockProperties[/code]
+## used to look block definitions up by their string id.
+func set_save_data(data: Array, resolver: Callable) -> void:
+	for grid_position in placed_blocks.keys():
+		remove_block(grid_position)
+
+	if not resolver.is_valid():
+		return
+
+	for entry in data:
+		if not entry is Dictionary:
+			continue
+		var id := StringName(entry.get("id", &""))
+		if id == &"":
+			continue
+		var properties = resolver.call(id)
+		if properties != null:
+			place_block(properties, entry.get("position", Vector3i.ZERO))

@@ -77,6 +77,34 @@ func has_item(item: ItemPropertiesResource, quantity: int = 1) -> bool:
 	return false
 
 
+func get_save_data() -> Dictionary:
+	var slot_data: Array = []
+	for slot in slots:
+		slot_data.append(slot.get_save_data())
+	return {
+		"size": size,
+		"slots": slot_data,
+	}
+
+
+## Restores the inventory from [param data]. [param resolver] is a
+## [code]func(id: StringName) -> ItemProperties[/code] passed through to each
+## slot to resolve item ids back into resources.
+func set_save_data(data: Dictionary, resolver: Callable) -> void:
+	size = int(data.get("size", size))
+
+	var slot_data = data.get("slots", [])
+	if not slot_data is Array:
+		return
+
+	for i in range(min(slots.size(), slot_data.size())):
+		var entry = slot_data[i]
+		if entry is Dictionary:
+			slots[i].set_save_data(entry, resolver)
+		else:
+			slots[i].clear()
+
+
 func _resize_slots() -> void:
 	while slots.size() < size:
 		slots.append(InventorySlotResource.new())

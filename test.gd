@@ -12,6 +12,7 @@ const ItemStack = preload("res://scripts/items/ItemStack.gd")
 const InteractionContext = preload("res://scripts/components/InteractionContext.gd")
 const BlockNode = preload("res://scripts/blocks/Block.gd")
 const WorldBlockPlacer = preload("res://scripts/world/WorldBlockPlacer.gd")
+const SaveSystemResource = preload("res://SaveSystem/save_system.gd")
 
 # YARD Registry .tres files (baked in the editor via the YARD tab).
 # Loaded at runtime so a missing/unbaked registry SKIPs its test instead of
@@ -54,6 +55,7 @@ func _init() -> void:
 		_test_world_block_placement,
 		_test_block_interaction_pipeline,
 		_test_minecraft_model_json,
+		_test_save_roundtrip,
 	]
 
 	for test in tests:
@@ -315,3 +317,62 @@ func _test_minecraft_model_json() -> int:
 		print("Minecraft model JSON smoke test passed.")
 		return PASS
 	return FAIL
+
+
+func _test_save_roundtrip() -> int:
+	var item_registry = _load_yard_registry(ITEM_YARD_REGISTRY_PATH, "item")
+	var block_registry = _load_yard_registry(BLOCK_YARD_REGISTRY_PATH, "block")
+	if item_registry == null or block_registry == null:
+		return SKIP
+
+	var item_resolver := func(id: StringName): return item_registry.load_entry(id)
+	var block_resolver := func(id: StringName): return block_registry.load_entry(id)
+
+	var kitchen_knife = item_registry.load_entry(&"kitchen_knife")
+	var chef_knife = item_registry.load_entry(&"chef_knife")
+	var wall = block_registry.load_entry(&"prototype_wall")
+
+	# Build some state: a 4-slot inventory with two items and one placed block.
+	var inventory := InventoryResource.new(4)
+	inventory.add_item(kitchen_knife, 1)
+	inventory.add_item(chef_knife, 1)
+
+	var world := WorldBlockPlacer.new()
+	world.place_block(wall, Vector3i(5, 0, 0))
+
+	# Persist through the SaveSystem to a file and read it back.
+	var save := SaveSystemResource.new()
+	save.set_value("inventory", inventory.get_save_data())
+	save.set_value("world", world.get_save_data())
+	var file_name := "roundtrip_test.txt"
+	save.set_save_game(file_name)
+
+	var loaded := SaveSystemResource.new()
+	loaded.get_save_game(file_name)
+
+	# Restore into fresh objects using the registry resolvers.
+	var restored_inventory := InventoryResource.new()
+	restored_inventory.set_save_data(loaded.get_value("inventory"), item_resolver)
+
+	var restored_world := WorldBlockPlacer.new()
+	restored_world.set_save_data(loaded.get_value("world"), block_resolver)
+
+	var restored_block := restored_world.get_block(Vector3i(5, 0, 0))
+	var result := FAIL
+	if restored_inventory.size != 4:
+		push_error("Expected restored inventory to keep its size of 4.")
+	elif not restored_inventory.has_item(kitchen_knife, 1):
+		push_error("Expected restored inventory to contain the kitchen_knife.")
+	elif not restored_inventory.has_item(chef_knife, 1):
+		push_error("Expected restored inventory to contain the chef_knife.")
+	elif restored_block == null:
+		push_error("Expected restored world to have a block at (5, 0, 0).")
+	elif restored_block.properties.id != &"prototype_wall":
+		push_error("Expected restored block to be prototype_wall.")
+	else:
+		print("Save round-trip smoke test passed.")
+		result = PASS
+
+	world.free()
+	restored_world.free()
+	return result

@@ -35,3 +35,27 @@ func add(amount: int) -> int:
 func clear() -> void:
 	item = null
 	quantity = 0
+
+
+func get_save_data() -> Dictionary:
+	if is_empty():
+		return {}
+	return {
+		"id": item.id,
+		"quantity": quantity,
+	}
+
+
+## Restores this slot from [param data]. [param resolver] is a
+## [code]func(id: StringName) -> ItemProperties[/code] used to look the item up
+## by its string id (e.g. a YARD registry's [code]load_entry[/code]).
+func set_save_data(data: Dictionary, resolver: Callable) -> void:
+	var id := StringName(data.get("id", &""))
+	if id == &"" or not resolver.is_valid():
+		clear()
+		return
+
+	item = resolver.call(id)
+	quantity = int(data.get("quantity", 0))
+	if item == null or quantity <= 0:
+		clear()
