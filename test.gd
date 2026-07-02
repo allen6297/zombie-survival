@@ -12,6 +12,7 @@ const ItemStack = preload("res://scripts/items/ItemStack.gd")
 const InteractionContext = preload("res://scripts/components/InteractionContext.gd")
 const BlockNode = preload("res://scripts/blocks/Block.gd")
 const WorldBlockPlacer = preload("res://scripts/world/WorldBlockPlacer.gd")
+const BlockEntityNode = preload("res://scripts/block_entities/BlockEntity.gd")
 const SaveSystemResource = preload("res://SaveSystem/save_system.gd")
 
 # YARD Registry .tres files (baked in the editor via the YARD tab).
@@ -56,6 +57,7 @@ func _init() -> void:
 		_test_block_interaction_pipeline,
 		_test_minecraft_model_json,
 		_test_save_roundtrip,
+		_test_block_entity_inventory_save,
 	]
 
 	for test in tests:
@@ -375,4 +377,48 @@ func _test_save_roundtrip() -> int:
 
 	world.free()
 	restored_world.free()
+	return result
+
+
+func _test_block_entity_inventory_save() -> int:
+	var item_registry = _load_yard_registry(ITEM_YARD_REGISTRY_PATH, "item")
+	var block_entity_registry = _load_yard_registry(BLOCK_ENTITY_YARD_REGISTRY_PATH, "block entity")
+	if item_registry == null or block_entity_registry == null:
+		return SKIP
+
+	var item_resolver := func(id: StringName): return item_registry.load_entry(id)
+	var kitchen_knife = item_registry.load_entry(&"kitchen_knife")
+	var properties = block_entity_registry.load_entry(&"container_block_entity")
+
+	# A container block entity holding one item at a known position.
+	var chest := BlockEntityNode.new()
+	chest.properties = properties
+	chest.block_position = Vector3i(1, 2, 3)
+	chest.inventory = InventoryResource.new(properties.inventory_size)
+	chest.inventory.add_item(kitchen_knife, 1)
+
+	var save := SaveSystemResource.new()
+	save.set_value("chest", chest.get_save_data())
+	save.set_save_game("block_entity_test.txt")
+
+	var loaded := SaveSystemResource.new()
+	loaded.get_save_game("block_entity_test.txt")
+
+	var restored := BlockEntityNode.new()
+	restored.properties = properties
+	restored.set_save_data(loaded.get_value("chest"), item_resolver)
+
+	var result := FAIL
+	if restored.block_position != Vector3i(1, 2, 3):
+		push_error("Expected restored block entity position to round-trip.")
+	elif restored.inventory == null:
+		push_error("Expected restored block entity to have an inventory.")
+	elif not restored.inventory.has_item(kitchen_knife, 1):
+		push_error("Expected restored block entity inventory to contain kitchen_knife.")
+	else:
+		print("Block entity inventory save smoke test passed.")
+		result = PASS
+
+	chest.free()
+	restored.free()
 	return result

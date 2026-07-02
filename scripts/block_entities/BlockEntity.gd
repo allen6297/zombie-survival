@@ -18,15 +18,29 @@ func _ready() -> void:
 
 
 func get_save_data() -> Dictionary:
-	return {
+	var data := {
 		&"id": properties.id if properties != null else &"",
 		&"block_position": block_position,
 	}
+	if inventory != null:
+		data[&"inventory"] = inventory.get_save_data()
+	return data
 
 
-func set_save_data(data: Dictionary) -> void:
+## Restores this block entity from [param data]. [param item_resolver] is a
+## [code]func(id: StringName) -> ItemProperties[/code] used to rebuild the
+## container inventory's items; pass it when the block entity has an inventory.
+func set_save_data(data: Dictionary, item_resolver := Callable()) -> void:
 	if data.has(&"block_position"):
 		block_position = data[&"block_position"]
+
+	if not data.has(&"inventory"):
+		return
+
+	if inventory == null:
+		var slot_count: int = properties.inventory_size if properties != null and properties.has_inventory() else 1
+		inventory = InventoryResource.new(slot_count)
+	inventory.set_save_data(data[&"inventory"], item_resolver)
 
 
 func _apply_properties() -> void:
