@@ -128,6 +128,12 @@ func _build_level() -> void:
 		for y in range(3):
 			world.place_block(held_block, Vector3i(3, y + 1, 3))
 
+		# Showcase real stair models facing different directions.
+		var stairs := BlockProperties.BlockShape.STAIRS
+		world.place_block(held_block, Vector3i(6, 1, 5), Vector3.ZERO, stairs, BlockProperties.BlockFacing.NORTH)
+		world.place_block(held_block, Vector3i(7, 1, 5), Vector3.ZERO, stairs, BlockProperties.BlockFacing.EAST)
+		world.place_block(held_block, Vector3i(8, 1, 5), Vector3.ZERO, stairs, BlockProperties.BlockFacing.SOUTH)
+
 
 func _physics_process(delta: float) -> void:
 	if player == null:

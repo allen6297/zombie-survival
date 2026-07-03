@@ -8,6 +8,7 @@ const ItemPropertiesResource = preload("res://scripts/items/ItemProperties.gd")
 const KITCHEN_KNIFE = preload("res://assets/definitions/items/knives/kitchen_knife.tres")
 const JsonDefinitionLoader = preload("res://scripts/registry/JsonDefinitionLoader.gd")
 const MinecraftModelJson = preload("res://scripts/models/MinecraftModelJson.gd")
+const BlockbenchModel = preload("res://scripts/models/BlockbenchModel.gd")
 const ItemNode = preload("res://scripts/items/Item.gd")
 const ItemStack = preload("res://scripts/items/ItemStack.gd")
 const InteractionContext = preload("res://scripts/components/InteractionContext.gd")
@@ -66,6 +67,7 @@ func _init() -> void:
 		_test_game_state_save,
 		_test_block_shapes,
 		_test_block_facing,
+		_test_stair_model,
 	]
 
 	for test in tests:
@@ -664,3 +666,25 @@ func _test_block_facing() -> int:
 	world.free()
 	restored_world.free()
 	return result
+
+
+func _test_stair_model() -> int:
+	var model = BlockbenchModel.load_from_file("res://assets/models/block/stairs.bbmodel")
+	if model == null or model.is_empty():
+		push_error("Expected stairs.bbmodel to load with elements.")
+		return FAIL
+
+	var mesh = model.build_mesh()
+
+	if model.elements.size() != 3:
+		push_error("Expected the stairs model to have 3 box elements, got %d." % model.elements.size())
+	elif mesh == null or mesh.get_surface_count() == 0:
+		push_error("Expected the stairs model to build a non-empty mesh.")
+	elif not mesh.get_aabb().size.is_equal_approx(Vector3.ONE):
+		push_error("Expected the stairs mesh to fill a 1x1x1 cell, got %s." % mesh.get_aabb().size)
+	elif model.build_collision() == null:
+		push_error("Expected the stairs model to build a collision shape.")
+	else:
+		print("Stair model smoke test passed.")
+		return PASS
+	return FAIL
