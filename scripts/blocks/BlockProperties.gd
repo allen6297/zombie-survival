@@ -12,6 +12,24 @@ enum CollisionMode {
 	TRIGGER,
 }
 
+## The forms a single block can take (à la "Clutter No More"). Shape is block
+## state, not a separate item, so every shape of a material shares one item.
+enum BlockShape {
+	FULL,
+	STAIRS,
+	SLAB,
+	VERTICAL_SLAB,
+	STEP,
+}
+
+const ALL_SHAPES: Array[int] = [
+	BlockShape.FULL,
+	BlockShape.STAIRS,
+	BlockShape.SLAB,
+	BlockShape.VERTICAL_SLAB,
+	BlockShape.STEP,
+]
+
 @export var id: StringName
 @export var display_name: String
 @export_multiline var description: String
@@ -27,11 +45,32 @@ enum CollisionMode {
 @export var drop_item: ItemPropertiesResource = null
 @export_range(0.0, 999.0, 1.0) var drop_quantity: int = 1
 @export var block_entity: BlockEntityPropertiesResource = null
+## When true, placed blocks can switch between [member allowed_shapes] on demand.
+@export var shapeable := false
+@export var default_shape: BlockShape = BlockShape.FULL
+## Shapes this block may take. Empty + shapeable means all of [constant ALL_SHAPES].
+@export var allowed_shapes: Array[int] = []
 @export var components: Array[ComponentPropertiesResource] = []
 
 
 func is_solid() -> bool:
 	return collision_mode == CollisionMode.SOLID
+
+
+func get_allowed_shapes() -> Array[int]:
+	if not shapeable:
+		return [int(default_shape)]
+	if not allowed_shapes.is_empty():
+		return allowed_shapes
+	return ALL_SHAPES.duplicate()
+
+
+func allows_shape(shape: int) -> bool:
+	return shape in get_allowed_shapes()
+
+
+func can_change_shape() -> bool:
+	return shapeable and get_allowed_shapes().size() > 1
 
 
 func should_drop_item() -> bool:

@@ -12,6 +12,8 @@ const InteractionContextResource := preload("res://scripts/components/Interactio
 
 # Runtime-only: reset to properties.max_health in _apply_properties().
 var current_health: float = 0.0
+# Runtime-only: the block's current form; see BlockProperties.BlockShape.
+var shape: int = BlockPropertiesResource.BlockShape.FULL
 
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
@@ -19,6 +21,58 @@ var current_health: float = 0.0
 
 func _ready() -> void:
 	_apply_properties()
+
+
+## Switches this block to [param new_shape] if the definition allows it.
+func set_shape(new_shape: int) -> bool:
+	if properties == null or not properties.allows_shape(new_shape):
+		return false
+
+	shape = new_shape
+	_apply_shape()
+	return true
+
+
+## Advances to the next allowed shape and returns it (unchanged if the block
+## has only one allowed shape).
+func cycle_shape() -> int:
+	if properties == null:
+		return shape
+
+	var allowed := properties.get_allowed_shapes()
+	if allowed.size() <= 1:
+		return shape
+
+	var index := allowed.find(shape)
+	shape = allowed[(index + 1) % allowed.size()] if index != -1 else allowed[0]
+	_apply_shape()
+	return shape
+
+
+## Fraction of the unit cell the current shape occupies, per axis.
+func get_shape_scale() -> Vector3:
+	match shape:
+		BlockPropertiesResource.BlockShape.SLAB:
+			return Vector3(1.0, 0.5, 1.0)
+		BlockPropertiesResource.BlockShape.VERTICAL_SLAB:
+			return Vector3(0.5, 1.0, 1.0)
+		BlockPropertiesResource.BlockShape.STEP:
+			return Vector3(1.0, 0.5, 0.5)
+		_:
+			return Vector3.ONE
+
+
+## Local offset that keeps a partial shape aligned to a cell edge/floor.
+func get_shape_offset() -> Vector3:
+	match shape:
+		BlockPropertiesResource.BlockShape.SLAB:
+			return Vector3(0.0, -0.25, 0.0)
+		BlockPropertiesResource.BlockShape.STEP:
+			return Vector3(0.0, -0.25, 0.25)
+		BlockPropertiesResource.BlockShape.VERTICAL_SLAB:
+			return Vector3(-0.25, 0.0, 0.0)
+		_:
+			return Vector3.ZERO
 
 
 func interact(context: InteractionContextResource = null, registry: ComponentProcessorRegistryResource = null) -> bool:
@@ -73,7 +127,13 @@ func break_block() -> void:
 
 
 func _apply_properties() -> void:
-	if not is_node_ready() or properties == null:
+	if properties == null:
+		return
+
+	# Shape is data, so resolve it even before the node is tree-ready.
+	shape = properties.default_shape if properties.allows_shape(properties.default_shape) else BlockPropertiesResource.BlockShape.FULL
+
+	if not is_node_ready():
 		return
 
 	current_health = properties.max_health
@@ -83,3 +143,19 @@ func _apply_properties() -> void:
 		var material := StandardMaterial3D.new()
 		material.albedo_texture = properties.texture
 		mesh_instance.set_surface_override_material(0, material)
+
+	_apply_shape()
+
+
+## Best-effort geometry for the current shape: scale/offset the box mesh and
+## collision. Full per-shape meshes (real stairs, etc.) are future work.
+func _apply_shape() -> void:
+	if not is_node_ready():
+		return
+
+	var scale := get_shape_scale()
+	var offset := get_shape_offset()
+	mesh_instance.scale = scale
+	mesh_instance.position = offset
+	collision_shape.scale = scale
+	collision_shape.position = offset

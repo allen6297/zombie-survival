@@ -10,7 +10,7 @@ var placed_blocks: Dictionary = {}
 var block_entities: Dictionary = {}
 
 
-func place_block(block_properties: BlockPropertiesResource, grid_position: Vector3i, normal: Vector3 = Vector3.ZERO) -> Block:
+func place_block(block_properties: BlockPropertiesResource, grid_position: Vector3i, normal: Vector3 = Vector3.ZERO, shape: int = -1) -> Block:
 	if block_properties == null or placed_blocks.has(grid_position):
 		return null
 
@@ -18,6 +18,8 @@ func place_block(block_properties: BlockPropertiesResource, grid_position: Vecto
 	block.properties = block_properties
 	block.position = Vector3(grid_position) * cell_size
 	add_child(block)
+	if shape >= 0:
+		block.set_shape(shape)
 	placed_blocks[grid_position] = block
 
 	if block_properties.has_block_entity():
@@ -36,6 +38,16 @@ func get_block(grid_position: Vector3i) -> Block:
 
 func get_block_entity(grid_position: Vector3i) -> BlockEntity:
 	return block_entities.get(grid_position, null) as BlockEntity
+
+
+func set_block_shape(grid_position: Vector3i, shape: int) -> bool:
+	var block := get_block(grid_position)
+	return block.set_shape(shape) if block != null else false
+
+
+func cycle_block_shape(grid_position: Vector3i) -> int:
+	var block := get_block(grid_position)
+	return block.cycle_shape() if block != null else -1
 
 
 func remove_block(grid_position: Vector3i) -> bool:
@@ -58,6 +70,7 @@ func get_save_data() -> Array:
 		var entry := {
 			"id": block.properties.id,
 			"position": grid_position,
+			"shape": block.shape,
 		}
 		var block_entity := get_block_entity(grid_position)
 		if block_entity != null:
@@ -88,7 +101,7 @@ func set_save_data(data: Array, block_resolver: Callable, item_resolver := Calla
 			continue
 
 		var grid_position: Vector3i = entry.get("position", Vector3i.ZERO)
-		place_block(properties, grid_position)
+		place_block(properties, grid_position, Vector3.ZERO, int(entry.get("shape", -1)))
 
 		if entry.has("block_entity"):
 			var block_entity := get_block_entity(grid_position)

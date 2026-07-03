@@ -44,6 +44,9 @@ static func load_block_registry(path: String) -> BlockRegistryResource:
 		block.emits_light = _bool(definition, "emits_light", false)
 		block.light_energy = _int(definition, "light_energy", 0)
 		block.drop_quantity = _int(definition, "drop_quantity", 1)
+		block.shapeable = _bool(definition, "shapeable", false)
+		block.default_shape = _block_shape(_string(definition, "default_shape", "full"))
+		block.allowed_shapes = _block_shapes(definition)
 		block.components = _components(definition)
 		registry.add_block(block)
 	return registry
@@ -163,6 +166,30 @@ static func _collision_mode(value: String) -> BlockPropertiesResource.CollisionM
 			return BlockPropertiesResource.CollisionMode.TRIGGER
 		_:
 			return BlockPropertiesResource.CollisionMode.SOLID
+
+
+static func _block_shape(value: String) -> BlockPropertiesResource.BlockShape:
+	match value.to_lower():
+		"stairs":
+			return BlockPropertiesResource.BlockShape.STAIRS
+		"slab":
+			return BlockPropertiesResource.BlockShape.SLAB
+		"vertical_slab":
+			return BlockPropertiesResource.BlockShape.VERTICAL_SLAB
+		"step":
+			return BlockPropertiesResource.BlockShape.STEP
+		_:
+			return BlockPropertiesResource.BlockShape.FULL
+
+
+static func _block_shapes(definition: Dictionary) -> Array[int]:
+	var shapes: Array[int] = []
+	var raw = definition.get("allowed_shapes", [])
+	if not raw is Array:
+		return shapes
+	for value in raw:
+		shapes.append(int(_block_shape(str(value))))
+	return shapes
 
 
 static func _entity_kind(value: String) -> EntityPropertiesResource.EntityKind:

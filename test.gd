@@ -64,6 +64,7 @@ func _init() -> void:
 		_test_inventory_component_state,
 		_test_block_entity_world_wiring,
 		_test_game_state_save,
+		_test_block_shapes,
 	]
 
 	for test in tests:
@@ -572,4 +573,53 @@ func _test_game_state_save() -> int:
 
 	game.world.free()
 	restored.world.free()
+	return result
+
+
+func _test_block_shapes() -> int:
+	# A synthetic shapeable block (à la Clutter No More): one block, three forms.
+	var block_props := BlockPropertiesResource.new()
+	block_props.id = &"test_shapeable"
+	block_props.shapeable = true
+	block_props.default_shape = BlockPropertiesResource.BlockShape.FULL
+	block_props.allowed_shapes = [
+		BlockPropertiesResource.BlockShape.FULL,
+		BlockPropertiesResource.BlockShape.SLAB,
+		BlockPropertiesResource.BlockShape.STAIRS,
+	]
+	var block_resolver := func(id: StringName): return block_props if id == &"test_shapeable" else null
+
+	var world := WorldBlockPlacer.new()
+	var placed := world.place_block(block_props, Vector3i(0, 0, 0))
+
+	var starts_full := placed.shape == BlockPropertiesResource.BlockShape.FULL
+	var set_slab := world.set_block_shape(Vector3i(0, 0, 0), BlockPropertiesResource.BlockShape.SLAB)
+	var slab_scale := placed.get_shape_scale()
+	var rejected := placed.set_shape(BlockPropertiesResource.BlockShape.VERTICAL_SLAB)
+	var cycled := world.cycle_block_shape(Vector3i(0, 0, 0))
+
+	# Shape survives a world save round-trip.
+	var restored_world := WorldBlockPlacer.new()
+	restored_world.set_save_data(world.get_save_data(), block_resolver)
+	var restored_shape := restored_world.get_block(Vector3i(0, 0, 0)).shape
+
+	var result := FAIL
+	if not starts_full:
+		push_error("Expected a placed block to start at its default FULL shape.")
+	elif not set_slab:
+		push_error("Expected setting an allowed shape (SLAB) to succeed.")
+	elif slab_scale != Vector3(1.0, 0.5, 1.0):
+		push_error("Expected the SLAB shape to occupy the bottom half of the cell.")
+	elif rejected:
+		push_error("Expected a disallowed shape (VERTICAL_SLAB) to be rejected.")
+	elif cycled != BlockPropertiesResource.BlockShape.STAIRS:
+		push_error("Expected cycling from SLAB to advance to STAIRS.")
+	elif restored_shape != BlockPropertiesResource.BlockShape.STAIRS:
+		push_error("Expected the block's shape to survive a world save round-trip.")
+	else:
+		print("Block shapes smoke test passed.")
+		result = PASS
+
+	world.free()
+	restored_world.free()
 	return result
