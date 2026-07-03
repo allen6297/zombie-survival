@@ -229,10 +229,6 @@ func _apply_shape() -> void:
 		_apply_facing()
 		return
 
-	# Non-FULL connected shapes can't do per-face CTM (their geometry differs),
-	# so they sample a single clean interior tile instead of the whole atlas.
-	_set_atlas_uv(true)
-
 	var model_mesh := _shape_mesh(shape)
 	if model_mesh != null:
 		mesh_instance.mesh = model_mesh
@@ -244,15 +240,25 @@ func _apply_shape() -> void:
 		# Concave model faces can be single-sided; render both sides.
 		if _material != null:
 			_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		# Non-FULL connected shape: map its UVs to the isolated (bordered) tile.
+		_set_atlas_uv(properties.connected_texture)
 		_apply_facing()
 		return
 
-	mesh_instance.mesh = _default_mesh
-	collision_shape.shape = _default_shape
-	if _material != null:
-		_material.cull_mode = BaseMaterial3D.CULL_BACK
 	var scale := get_shape_scale()
 	var offset := get_shape_offset()
+	if properties.connected_texture:
+		# Per-face box so the isolated tile's border wraps every edge (the
+		# default BoxMesh packs all faces into one UV net, so it can't).
+		mesh_instance.mesh = _build_uniform_atlas_mesh(0)
+		_set_atlas_uv(false)
+		if _material != null:
+			_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	else:
+		mesh_instance.mesh = _default_mesh
+		if _material != null:
+			_material.cull_mode = BaseMaterial3D.CULL_BACK
+	collision_shape.shape = _default_shape
 	mesh_instance.scale = scale
 	mesh_instance.position = offset
 	collision_shape.scale = scale
@@ -335,6 +341,34 @@ func _build_connected_mesh() -> ArrayMesh:
 		var uv11 := Vector2(uv.position.x + uv.size.x, uv.position.y)
 		var uv01 := Vector2(uv.position.x, uv.position.y)
 
+		_add_quad(st, n, c00, uv00, c10, uv10, c11, uv11, c01, uv01)
+
+	return st.commit()
+
+
+## A unit box where every face is UV-mapped to a single atlas tile (so a border
+## tile wraps all six faces). Scaled/offset by the caller for partial shapes.
+func _build_uniform_atlas_mesh(index: int) -> ArrayMesh:
+	var atlas_px := Vector2(96, 32)
+	if properties.texture != null:
+		atlas_px = properties.texture.get_size()
+	var uv := ConnectedTextureResource.tile_uv(index, atlas_px)
+
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for face in FACES:
+		var n := Vector3(face["normal"])
+		var u := Vector3(face["u"])
+		var v := Vector3(face["v"])
+		var center := n * 0.5
+		var c00 := center - u * 0.5 - v * 0.5
+		var c10 := center + u * 0.5 - v * 0.5
+		var c11 := center + u * 0.5 + v * 0.5
+		var c01 := center - u * 0.5 + v * 0.5
+		var uv00 := Vector2(uv.position.x, uv.position.y + uv.size.y)
+		var uv10 := Vector2(uv.position.x + uv.size.x, uv.position.y + uv.size.y)
+		var uv11 := Vector2(uv.position.x + uv.size.x, uv.position.y)
+		var uv01 := Vector2(uv.position.x, uv.position.y)
 		_add_quad(st, n, c00, uv00, c10, uv10, c11, uv11, c01, uv01)
 
 	return st.commit()
