@@ -224,6 +224,7 @@ func _apply_shape() -> void:
 		collision_shape.position = Vector3.ZERO
 		if _material != null:
 			_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_apply_facing()
 		return
 
 	var model_mesh := _shape_mesh(shape)
@@ -237,6 +238,7 @@ func _apply_shape() -> void:
 		# Concave model faces can be single-sided; render both sides.
 		if _material != null:
 			_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_apply_facing()
 		return
 
 	mesh_instance.mesh = _default_mesh
@@ -249,6 +251,8 @@ func _apply_shape() -> void:
 	mesh_instance.position = offset
 	collision_shape.scale = scale
 	collision_shape.position = offset
+	# Keep the block's rotation consistent with the (possibly new) shape.
+	_apply_facing()
 
 
 ## Rebuilds the connected-texture mesh (call when a neighbour changes).
@@ -348,5 +352,10 @@ static func _build_shape_model(shape_value: int) -> void:
 ## Rotates the whole block so its shape/offset face the current direction.
 func _apply_facing() -> void:
 	if not is_node_ready():
+		return
+	# A connected-texture FULL block resolves each face from neighbours, so
+	# rotating it would spin the texture out of alignment. Keep it upright.
+	if properties != null and properties.connected_texture and shape == BlockPropertiesResource.BlockShape.FULL:
+		rotation.y = 0.0
 		return
 	rotation.y = BlockPropertiesResource.facing_yaw(facing)

@@ -118,6 +118,11 @@ func _load_blocks() -> void:
 		held_block = wall.duplicate()
 		held_block.shapeable = true
 		held_block.directional = true
+		# Placed FULL blocks use the same connected-texture atlas as the floor
+		# (a connected FULL block ignores facing so its texture stays aligned).
+		if ResourceLoader.exists("res://assets/textures/block/texture.png"):
+			held_block.connected_texture = true
+			held_block.texture = load("res://assets/textures/block/texture.png")
 
 	_update_hud()
 
