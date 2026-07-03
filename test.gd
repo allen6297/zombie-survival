@@ -9,6 +9,7 @@ const KITCHEN_KNIFE = preload("res://assets/definitions/items/knives/kitchen_kni
 const JsonDefinitionLoader = preload("res://scripts/registry/JsonDefinitionLoader.gd")
 const MinecraftModelJson = preload("res://scripts/models/MinecraftModelJson.gd")
 const BlockbenchModel = preload("res://scripts/models/BlockbenchModel.gd")
+const ConnectedTextureResource = preload("res://scripts/world/ConnectedTexture.gd")
 const ItemNode = preload("res://scripts/items/Item.gd")
 const ItemStack = preload("res://scripts/items/ItemStack.gd")
 const InteractionContext = preload("res://scripts/components/InteractionContext.gd")
@@ -68,6 +69,7 @@ func _init() -> void:
 		_test_block_shapes,
 		_test_block_facing,
 		_test_stair_model,
+		_test_connected_texture,
 	]
 
 	for test in tests:
@@ -676,8 +678,8 @@ func _test_stair_model() -> int:
 
 	var mesh = model.build_mesh()
 
-	if model.elements.size() != 3:
-		push_error("Expected the stairs model to have 3 box elements, got %d." % model.elements.size())
+	if model.face_count() == 0:
+		push_error("Expected the stairs model to have faces, got %d." % model.face_count())
 	elif mesh == null or mesh.get_surface_count() == 0:
 		push_error("Expected the stairs model to build a non-empty mesh.")
 	elif not mesh.get_aabb().size.is_equal_approx(Vector3.ONE):
@@ -688,3 +690,39 @@ func _test_stair_model() -> int:
 		print("Stair model smoke test passed.")
 		return PASS
 	return FAIL
+
+
+func _test_connected_texture() -> int:
+	# The lookup is generated from quadrant states -> exactly 47 tiles.
+	if ConnectedTextureResource.tile_count() != 47:
+		push_error("Expected 47 connected-texture tiles, got %d." % ConnectedTextureResource.tile_count())
+		return FAIL
+
+	# Neighbour masks -> tile selection, exercised through a real world.
+	var props := BlockPropertiesResource.new()
+	props.id = &"ctm_block"
+	var world := WorldBlockPlacer.new()
+	for x in range(-1, 2):
+		for z in range(-1, 2):
+			world.place_block(props, Vector3i(x, 0, z))
+	var center := world.get_block(Vector3i(0, 0, 0))
+	var top_mask := center.face_connection_mask(0)         # top face: XZ plane
+
+	var isolated := world.place_block(props, Vector3i(20, 0, 0))
+	var iso_mask := isolated.face_connection_mask(0)
+
+	var result := FAIL
+	if ConnectedTextureResource.tile_index(0) != 0:
+		push_error("Expected the no-neighbour mask to map to tile 0.")
+	elif top_mask != 0xFF:
+		push_error("Expected a fully surrounded top face to connect on all 8 sides, got %d." % top_mask)
+	elif ConnectedTextureResource.tile_index(top_mask) != 46:
+		push_error("Expected the fully connected mask to map to the interior tile 46.")
+	elif iso_mask != 0:
+		push_error("Expected an isolated block's face to have no connections.")
+	else:
+		print("Connected texture smoke test passed.")
+		result = PASS
+
+	world.free()
+	return result

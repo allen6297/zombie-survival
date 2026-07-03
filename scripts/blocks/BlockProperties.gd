@@ -62,6 +62,9 @@ enum BlockFacing {
 ## When true, placed blocks can be rotated to face NORTH/EAST/SOUTH/WEST.
 @export var directional := false
 @export var default_facing: BlockFacing = BlockFacing.NORTH
+## When true, FULL-shape faces pick a tile from `texture` (a 12x4 CTM atlas)
+## based on same-block neighbours. See ConnectedTexture.
+@export var connected_texture := false
 @export var components: Array[ComponentPropertiesResource] = []
 
 

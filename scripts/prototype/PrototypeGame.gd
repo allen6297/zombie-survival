@@ -105,6 +105,11 @@ func _load_blocks() -> void:
 
 	var registry = load(BLOCK_REGISTRY_PATH)
 	floor_block = registry.load_entry(&"prototype_floor")
+	if floor_block != null and ResourceLoader.exists("res://assets/textures/block/texture.png"):
+		# Demo the connected-texture atlas on the floor.
+		floor_block = floor_block.duplicate()
+		floor_block.connected_texture = true
+		floor_block.texture = load("res://assets/textures/block/texture.png")
 
 	var wall = registry.load_entry(&"prototype_wall")
 	if wall != null:

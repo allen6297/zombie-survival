@@ -49,6 +49,7 @@ static func load_block_registry(path: String) -> BlockRegistryResource:
 		block.allowed_shapes = _block_shapes(definition)
 		block.directional = _bool(definition, "directional", false)
 		block.default_facing = _block_facing(_string(definition, "default_facing", "north"))
+		block.connected_texture = _bool(definition, "connected_texture", false)
 		block.components = _components(definition)
 		registry.add_block(block)
 	return registry

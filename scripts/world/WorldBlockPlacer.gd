@@ -17,6 +17,7 @@ func place_block(block_properties: BlockPropertiesResource, grid_position: Vecto
 	var block := BlockScene.instantiate() as Block
 	block.properties = block_properties
 	block.grid_position = grid_position
+	block.world = self
 	block.position = Vector3(grid_position) * cell_size
 	add_child(block)
 	if shape >= 0:
@@ -32,6 +33,7 @@ func place_block(block_properties: BlockPropertiesResource, grid_position: Vecto
 		block.add_child(block_entity)
 		block_entities[grid_position] = block_entity
 
+	_refresh_connected_around(grid_position)
 	return block
 
 
@@ -71,7 +73,21 @@ func remove_block(grid_position: Vector3i) -> bool:
 	placed_blocks.erase(grid_position)
 	block_entities.erase(grid_position)
 	block.queue_free()
+	_refresh_connected_around(grid_position)
 	return true
+
+
+## Rebuilds connected-texture meshes on the 26 neighbours of [param grid_position]
+## so their borders update after a placement/removal.
+func _refresh_connected_around(grid_position: Vector3i) -> void:
+	for x in range(-1, 2):
+		for y in range(-1, 2):
+			for z in range(-1, 2):
+				if x == 0 and y == 0 and z == 0:
+					continue
+				var neighbour := get_block(grid_position + Vector3i(x, y, z))
+				if neighbour != null:
+					neighbour.refresh_connected()
 
 
 func get_save_data() -> Array:
