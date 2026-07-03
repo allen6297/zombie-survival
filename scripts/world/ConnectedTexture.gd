@@ -17,11 +17,15 @@ class_name ConnectedTexture
 const COLS := 12
 const ROWS := 4
 
-# canonical tile index -> linear atlas slot (row * COLS + col)
+# canonical tile index -> linear atlas slot (row * COLS + col), derived by
+# matching each connection case's expected border bitmap against texture.png.
+# 42 entries are exact matches; indices 5, 25, 32, 39, 43 are best-effort
+# (slots 20, 21, 23, 24, 46) because those tiles don't match the standard
+# drawing convention cleanly — verify them in-game and adjust if wrong.
 const TILE_LAYOUT: Array[int] = [
-	0, 36, 1, 16, 37, 26, 12, 4, 6, 30, 13, 28, 25, 3, 17, 2,
-	18, 40, 5, 19, 7, 46, 8, 31, 9, 23, 15, 43, 29, 10, 34, 14,
-	26, 45, 39, 42, 38, 41, 20, 11, 35, 33, 27, 26, 32, 44, 26,
+	0, 36, 1, 16, 37, 20, 12, 4, 6, 30, 13, 28, 25, 3, 17, 2,
+	18, 40, 5, 19, 7, 22, 8, 31, 9, 21, 15, 43, 29, 10, 34, 14,
+	23, 45, 39, 42, 38, 41, 11, 24, 35, 33, 27, 46, 32, 44, 26,
 ]
 
 # 8-neighbour bit order.
