@@ -30,6 +30,15 @@ const ALL_SHAPES: Array[int] = [
 	BlockShape.STEP,
 ]
 
+## Horizontal facing for directional blocks. Order matters: rotating advances
+## NORTH -> EAST -> SOUTH -> WEST (clockwise seen from above).
+enum BlockFacing {
+	NORTH,
+	EAST,
+	SOUTH,
+	WEST,
+}
+
 @export var id: StringName
 @export var display_name: String
 @export_multiline var description: String
@@ -50,6 +59,9 @@ const ALL_SHAPES: Array[int] = [
 @export var default_shape: BlockShape = BlockShape.FULL
 ## Shapes this block may take. Empty + shapeable means all of [constant ALL_SHAPES].
 @export var allowed_shapes: Array[int] = []
+## When true, placed blocks can be rotated to face NORTH/EAST/SOUTH/WEST.
+@export var directional := false
+@export var default_facing: BlockFacing = BlockFacing.NORTH
 @export var components: Array[ComponentPropertiesResource] = []
 
 
@@ -71,6 +83,24 @@ func allows_shape(shape: int) -> bool:
 
 func can_change_shape() -> bool:
 	return shapeable and get_allowed_shapes().size() > 1
+
+
+func can_change_facing() -> bool:
+	return directional
+
+
+## Yaw (radians about +Y) that orients a block so its front points [param facing].
+## NORTH is the unrotated front (local -Z).
+static func facing_yaw(facing: int) -> float:
+	match facing:
+		BlockFacing.EAST:
+			return -PI / 2.0
+		BlockFacing.SOUTH:
+			return PI
+		BlockFacing.WEST:
+			return PI / 2.0
+		_:
+			return 0.0
 
 
 func should_drop_item() -> bool:

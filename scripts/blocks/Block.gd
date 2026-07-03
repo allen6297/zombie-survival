@@ -14,6 +14,8 @@ const InteractionContextResource := preload("res://scripts/components/Interactio
 var current_health: float = 0.0
 # Runtime-only: the block's current form; see BlockProperties.BlockShape.
 var shape: int = BlockPropertiesResource.BlockShape.FULL
+# Runtime-only: horizontal facing; see BlockProperties.BlockFacing.
+var facing: int = BlockPropertiesResource.BlockFacing.NORTH
 # Runtime-only: grid cell this block was placed at; set by WorldBlockPlacer.
 var grid_position: Vector3i = Vector3i.ZERO
 
@@ -49,6 +51,26 @@ func cycle_shape() -> int:
 	shape = allowed[(index + 1) % allowed.size()] if index != -1 else allowed[0]
 	_apply_shape()
 	return shape
+
+
+## Rotates this block to [param new_facing] if the definition is directional.
+func set_facing(new_facing: int) -> bool:
+	if properties == null or not properties.directional:
+		return false
+
+	facing = new_facing
+	_apply_facing()
+	return true
+
+
+## Advances to the next facing (NORTH -> EAST -> SOUTH -> WEST) and returns it.
+func rotate_facing() -> int:
+	if properties == null or not properties.directional:
+		return facing
+
+	facing = (facing + 1) % 4
+	_apply_facing()
+	return facing
 
 
 ## Fraction of the unit cell the current shape occupies, per axis.
@@ -132,8 +154,9 @@ func _apply_properties() -> void:
 	if properties == null:
 		return
 
-	# Shape is data, so resolve it even before the node is tree-ready.
+	# Shape and facing are data, so resolve them even before the node is ready.
 	shape = properties.default_shape if properties.allows_shape(properties.default_shape) else BlockPropertiesResource.BlockShape.FULL
+	facing = properties.default_facing
 
 	if not is_node_ready():
 		return
@@ -147,6 +170,7 @@ func _apply_properties() -> void:
 		mesh_instance.set_surface_override_material(0, material)
 
 	_apply_shape()
+	_apply_facing()
 
 
 ## Best-effort geometry for the current shape: scale/offset the box mesh and
@@ -161,3 +185,10 @@ func _apply_shape() -> void:
 	mesh_instance.position = offset
 	collision_shape.scale = scale
 	collision_shape.position = offset
+
+
+## Rotates the whole block so its shape/offset face the current direction.
+func _apply_facing() -> void:
+	if not is_node_ready():
+		return
+	rotation.y = BlockPropertiesResource.facing_yaw(facing)

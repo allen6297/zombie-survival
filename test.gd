@@ -65,6 +65,7 @@ func _init() -> void:
 		_test_block_entity_world_wiring,
 		_test_game_state_save,
 		_test_block_shapes,
+		_test_block_facing,
 	]
 
 	for test in tests:
@@ -618,6 +619,46 @@ func _test_block_shapes() -> int:
 		push_error("Expected the block's shape to survive a world save round-trip.")
 	else:
 		print("Block shapes smoke test passed.")
+		result = PASS
+
+	world.free()
+	restored_world.free()
+	return result
+
+
+func _test_block_facing() -> int:
+	# A synthetic directional block: placement + rotation + persistence.
+	var block_props := BlockPropertiesResource.new()
+	block_props.id = &"test_directional"
+	block_props.directional = true
+	block_props.default_facing = BlockPropertiesResource.BlockFacing.NORTH
+	var block_resolver := func(id: StringName): return block_props if id == &"test_directional" else null
+
+	var world := WorldBlockPlacer.new()
+	var placed := world.place_block(block_props, Vector3i(0, 0, 0), Vector3.ZERO, -1, BlockPropertiesResource.BlockFacing.EAST)
+
+	var placed_east := placed.facing == BlockPropertiesResource.BlockFacing.EAST
+	# Rotation only applies once the block is in the tree, so verify the pure
+	# facing->yaw helper directly.
+	var east_yaw := BlockPropertiesResource.facing_yaw(BlockPropertiesResource.BlockFacing.EAST)
+	# Rotate EAST -> SOUTH.
+	var rotated := world.rotate_block_facing(Vector3i(0, 0, 0))
+
+	var restored_world := WorldBlockPlacer.new()
+	restored_world.set_save_data(world.get_save_data(), block_resolver)
+	var restored_facing := restored_world.get_block(Vector3i(0, 0, 0)).facing
+
+	var result := FAIL
+	if not placed_east:
+		push_error("Expected the block to be placed facing EAST.")
+	elif not is_equal_approx(east_yaw, -PI / 2.0):
+		push_error("Expected EAST facing to map to a -90 degree yaw.")
+	elif rotated != BlockPropertiesResource.BlockFacing.SOUTH:
+		push_error("Expected rotating from EAST to advance to SOUTH.")
+	elif restored_facing != BlockPropertiesResource.BlockFacing.SOUTH:
+		push_error("Expected the block's facing to survive a world save round-trip.")
+	else:
+		print("Block facing smoke test passed.")
 		result = PASS
 
 	world.free()

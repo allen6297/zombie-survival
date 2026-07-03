@@ -108,10 +108,11 @@ func _load_blocks() -> void:
 
 	var wall = registry.load_entry(&"prototype_wall")
 	if wall != null:
-		# Duplicate so making the held block shapeable doesn't mutate the
-		# shared registry entry.
+		# Duplicate so tweaking the held block doesn't mutate the shared
+		# registry entry.
 		held_block = wall.duplicate()
 		held_block.shapeable = true
+		held_block.directional = true
 
 	_update_hud()
 
@@ -175,6 +176,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			)
 		elif event.keycode == KEY_R:
 			_cycle_held_shape()
+		elif event.keycode == KEY_F:
+			_rotate_targeted()
 
 
 func _targeted_block() -> Block:
@@ -199,7 +202,23 @@ func _place_targeted() -> void:
 
 	var normal: Vector3 = ray.get_collision_normal()
 	var target: Vector3i = block.grid_position + Vector3i(normal.round())
-	world.place_block(held_block, target, normal, held_shape)
+	var facing := _facing_toward_player() if held_block.directional else -1
+	world.place_block(held_block, target, normal, held_shape, facing)
+
+
+func _rotate_targeted() -> void:
+	var block := _targeted_block()
+	if block != null:
+		world.rotate_block_facing(block.grid_position)
+
+
+## The cardinal facing whose front points back toward the player, so placed
+## directional blocks face the player (like most Minecraft directional blocks).
+func _facing_toward_player() -> int:
+	var to_player: Vector3 = player.global_transform.basis.z
+	if absf(to_player.x) > absf(to_player.z):
+		return BlockProperties.BlockFacing.EAST if to_player.x > 0.0 else BlockProperties.BlockFacing.WEST
+	return BlockProperties.BlockFacing.SOUTH if to_player.z > 0.0 else BlockProperties.BlockFacing.NORTH
 
 
 func _cycle_held_shape() -> void:
@@ -219,6 +238,6 @@ func _update_hud() -> void:
 	var shape_name: String = SHAPE_NAMES[held_shape] if held_shape < SHAPE_NAMES.size() else str(held_shape)
 	hud_label.text = "\n".join([
 		"WASD move  ·  Space jump  ·  mouse look",
-		"Left-click break  ·  Right-click place",
-		"R cycle shape (%s)  ·  Esc free mouse" % shape_name,
+		"Left-click break  ·  Right-click place (faces you)",
+		"R cycle shape (%s)  ·  F rotate block  ·  Esc free mouse" % shape_name,
 	])

@@ -10,7 +10,7 @@ var placed_blocks: Dictionary = {}
 var block_entities: Dictionary = {}
 
 
-func place_block(block_properties: BlockPropertiesResource, grid_position: Vector3i, normal: Vector3 = Vector3.ZERO, shape: int = -1) -> Block:
+func place_block(block_properties: BlockPropertiesResource, grid_position: Vector3i, normal: Vector3 = Vector3.ZERO, shape: int = -1, facing: int = -1) -> Block:
 	if block_properties == null or placed_blocks.has(grid_position):
 		return null
 
@@ -21,6 +21,8 @@ func place_block(block_properties: BlockPropertiesResource, grid_position: Vecto
 	add_child(block)
 	if shape >= 0:
 		block.set_shape(shape)
+	if facing >= 0:
+		block.set_facing(facing)
 	placed_blocks[grid_position] = block
 
 	if block_properties.has_block_entity():
@@ -51,6 +53,16 @@ func cycle_block_shape(grid_position: Vector3i) -> int:
 	return block.cycle_shape() if block != null else -1
 
 
+func set_block_facing(grid_position: Vector3i, facing: int) -> bool:
+	var block := get_block(grid_position)
+	return block.set_facing(facing) if block != null else false
+
+
+func rotate_block_facing(grid_position: Vector3i) -> int:
+	var block := get_block(grid_position)
+	return block.rotate_facing() if block != null else -1
+
+
 func remove_block(grid_position: Vector3i) -> bool:
 	var block := get_block(grid_position)
 	if block == null:
@@ -72,6 +84,7 @@ func get_save_data() -> Array:
 			"id": block.properties.id,
 			"position": grid_position,
 			"shape": block.shape,
+			"facing": block.facing,
 		}
 		var block_entity := get_block_entity(grid_position)
 		if block_entity != null:
@@ -102,7 +115,7 @@ func set_save_data(data: Array, block_resolver: Callable, item_resolver := Calla
 			continue
 
 		var grid_position: Vector3i = entry.get("position", Vector3i.ZERO)
-		place_block(properties, grid_position, Vector3.ZERO, int(entry.get("shape", -1)))
+		place_block(properties, grid_position, Vector3.ZERO, int(entry.get("shape", -1)), int(entry.get("facing", -1)))
 
 		if entry.has("block_entity"):
 			var block_entity := get_block_entity(grid_position)

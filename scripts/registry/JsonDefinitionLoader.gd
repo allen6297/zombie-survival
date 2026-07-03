@@ -47,6 +47,8 @@ static func load_block_registry(path: String) -> BlockRegistryResource:
 		block.shapeable = _bool(definition, "shapeable", false)
 		block.default_shape = _block_shape(_string(definition, "default_shape", "full"))
 		block.allowed_shapes = _block_shapes(definition)
+		block.directional = _bool(definition, "directional", false)
+		block.default_facing = _block_facing(_string(definition, "default_facing", "north"))
 		block.components = _components(definition)
 		registry.add_block(block)
 	return registry
@@ -190,6 +192,18 @@ static func _block_shapes(definition: Dictionary) -> Array[int]:
 	for value in raw:
 		shapes.append(int(_block_shape(str(value))))
 	return shapes
+
+
+static func _block_facing(value: String) -> BlockPropertiesResource.BlockFacing:
+	match value.to_lower():
+		"east":
+			return BlockPropertiesResource.BlockFacing.EAST
+		"south":
+			return BlockPropertiesResource.BlockFacing.SOUTH
+		"west":
+			return BlockPropertiesResource.BlockFacing.WEST
+		_:
+			return BlockPropertiesResource.BlockFacing.NORTH
 
 
 static func _entity_kind(value: String) -> EntityPropertiesResource.EntityKind:
