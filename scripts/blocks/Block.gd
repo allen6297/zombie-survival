@@ -224,8 +224,14 @@ func _apply_shape() -> void:
 		collision_shape.position = Vector3.ZERO
 		if _material != null:
 			_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		# Mesh UVs already index the atlas directly.
+		_set_atlas_uv(false)
 		_apply_facing()
 		return
+
+	# Non-FULL connected shapes can't do per-face CTM (their geometry differs),
+	# so they sample a single clean interior tile instead of the whole atlas.
+	_set_atlas_uv(true)
 
 	var model_mesh := _shape_mesh(shape)
 	if model_mesh != null:
@@ -253,6 +259,23 @@ func _apply_shape() -> void:
 	collision_shape.position = offset
 	# Keep the block's rotation consistent with the (possibly new) shape.
 	_apply_facing()
+
+
+## Maps the material's UVs to one interior atlas tile (single = true) or to the
+## whole 0..1 range (single = false, for the CTM mesh whose UVs are already
+## atlas coordinates). No-op for non-connected blocks.
+func _set_atlas_uv(single: bool) -> void:
+	if _material == null or not properties.connected_texture:
+		return
+	if not single:
+		_material.uv1_scale = Vector3.ONE
+		_material.uv1_offset = Vector3.ZERO
+		return
+	var atlas_px := properties.texture.get_size() if properties.texture != null else Vector2(96, 32)
+	# Canonical tile 46 is the fully connected (border-free) interior.
+	var rect := ConnectedTextureResource.tile_uv(46, atlas_px)
+	_material.uv1_scale = Vector3(rect.size.x, rect.size.y, 1.0)
+	_material.uv1_offset = Vector3(rect.position.x, rect.position.y, 0.0)
 
 
 ## Rebuilds the connected-texture mesh (call when a neighbour changes).
