@@ -272,8 +272,9 @@ func _set_atlas_uv(single: bool) -> void:
 		_material.uv1_offset = Vector3.ZERO
 		return
 	var atlas_px := properties.texture.get_size() if properties.texture != null else Vector2(96, 32)
-	# Canonical tile 46 is the fully connected (border-free) interior.
-	var rect := ConnectedTextureResource.tile_uv(46, atlas_px)
+	# Canonical tile 0 is the isolated (fully bordered) tile, so a standalone
+	# partial-shape block reads as a discrete block rather than a connected one.
+	var rect := ConnectedTextureResource.tile_uv(0, atlas_px)
 	_material.uv1_scale = Vector3(rect.size.x, rect.size.y, 1.0)
 	_material.uv1_offset = Vector3(rect.position.x, rect.position.y, 0.0)
 
