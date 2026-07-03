@@ -16,6 +16,7 @@ func place_block(block_properties: BlockPropertiesResource, grid_position: Vecto
 
 	var block := BlockScene.instantiate() as Block
 	block.properties = block_properties
+	block.grid_position = grid_position
 	block.position = Vector3(grid_position) * cell_size
 	add_child(block)
 	if shape >= 0:

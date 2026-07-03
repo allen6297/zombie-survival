@@ -14,6 +14,8 @@ const InteractionContextResource := preload("res://scripts/components/Interactio
 var current_health: float = 0.0
 # Runtime-only: the block's current form; see BlockProperties.BlockShape.
 var shape: int = BlockPropertiesResource.BlockShape.FULL
+# Runtime-only: grid cell this block was placed at; set by WorldBlockPlacer.
+var grid_position: Vector3i = Vector3i.ZERO
 
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D

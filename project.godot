@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="test"
-run/main_scene="uid://dijjkn3l760ma"
+run/main_scene="res://scenes/prototype/prototype.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
